@@ -387,13 +387,13 @@
         "file":  "nantes_01.pmtiles",
         "zone":  "Nantes",
         "bbox":  [
-                     1.48,
+                     -1.64,
                      47.17,
-                     1.64,
+                     -1.48,
                      47.28
                  ],
         "maxzoom":  null,
-        "bytes":  3342769
+        "bytes":  14108603
     },
     {
         "file":  "montpellier_01.pmtiles",
