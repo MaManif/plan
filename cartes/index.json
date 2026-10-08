@@ -1,0 +1,446 @@
+﻿[
+    {
+        "file":  "france_01.pmtiles",
+        "zone":  "France (faible detail)",
+        "bbox":  [
+                     -5.5,
+                     41.3,
+                     2.1500000000000004,
+                     46.25
+                 ],
+        "maxzoom":  9,
+        "bytes":  21426499
+    },
+    {
+        "file":  "france_02.pmtiles",
+        "zone":  "France (faible detail)",
+        "bbox":  [
+                     -5.5,
+                     46.25,
+                     2.1500000000000004,
+                     51.2
+                 ],
+        "maxzoom":  9,
+        "bytes":  21124246
+    },
+    {
+        "file":  "france_03.pmtiles",
+        "zone":  "France (faible detail)",
+        "bbox":  [
+                     2.1500000000000004,
+                     41.3,
+                     9.8,
+                     46.25
+                 ],
+        "maxzoom":  9,
+        "bytes":  24066951
+    },
+    {
+        "file":  "france_04.pmtiles",
+        "zone":  "France (faible detail)",
+        "bbox":  [
+                     2.1500000000000004,
+                     46.25,
+                     5.9750000000000005,
+                     51.2
+                 ],
+        "maxzoom":  9,
+        "bytes":  22623695
+    },
+    {
+        "file":  "france_05.pmtiles",
+        "zone":  "France (faible detail)",
+        "bbox":  [
+                     5.9750000000000005,
+                     46.25,
+                     9.8,
+                     51.2
+                 ],
+        "maxzoom":  9,
+        "bytes":  21404630
+    },
+    {
+        "file":  "idf_01.pmtiles",
+        "zone":  "Ile-de-France",
+        "bbox":  [
+                     1.446,
+                     48.12,
+                     1.97425,
+                     48.680499999999995
+                 ],
+        "maxzoom":  15,
+        "bytes":  18397842
+    },
+    {
+        "file":  "idf_02.pmtiles",
+        "zone":  "Ile-de-France",
+        "bbox":  [
+                     1.97425,
+                     48.12,
+                     2.5025,
+                     48.40025
+                 ],
+        "maxzoom":  15,
+        "bytes":  11429793
+    },
+    {
+        "file":  "idf_03.pmtiles",
+        "zone":  "Ile-de-France",
+        "bbox":  [
+                     1.97425,
+                     48.40025,
+                     2.238375,
+                     48.680499999999995
+                 ],
+        "maxzoom":  15,
+        "bytes":  12049847
+    },
+    {
+        "file":  "idf_04.pmtiles",
+        "zone":  "Ile-de-France",
+        "bbox":  [
+                     2.238375,
+                     48.40025,
+                     2.5025,
+                     48.680499999999995
+                 ],
+        "maxzoom":  15,
+        "bytes":  18997822
+    },
+    {
+        "file":  "idf_05.pmtiles",
+        "zone":  "Ile-de-France",
+        "bbox":  [
+                     1.446,
+                     48.680499999999995,
+                     1.97425,
+                     48.96075
+                 ],
+        "maxzoom":  15,
+        "bytes":  18873295
+    },
+    {
+        "file":  "idf_06.pmtiles",
+        "zone":  "Ile-de-France",
+        "bbox":  [
+                     1.446,
+                     48.96075,
+                     1.97425,
+                     49.241
+                 ],
+        "maxzoom":  15,
+        "bytes":  18098145
+    },
+    {
+        "file":  "idf_07.pmtiles",
+        "zone":  "Ile-de-France",
+        "bbox":  [
+                     1.97425,
+                     48.680499999999995,
+                     2.238375,
+                     48.820624999999993
+                 ],
+        "maxzoom":  15,
+        "bytes":  16405884
+    },
+    {
+        "file":  "idf_08.pmtiles",
+        "zone":  "Ile-de-France",
+        "bbox":  [
+                     1.97425,
+                     48.820624999999993,
+                     2.238375,
+                     48.96075
+                 ],
+        "maxzoom":  15,
+        "bytes":  21012778
+    },
+    {
+        "file":  "idf_09.pmtiles",
+        "zone":  "Ile-de-France",
+        "bbox":  [
+                     2.238375,
+                     48.680499999999995,
+                     2.3704375,
+                     48.820624999999993
+                 ],
+        "maxzoom":  15,
+        "bytes":  16384200
+    },
+    {
+        "file":  "idf_10.pmtiles",
+        "zone":  "Ile-de-France",
+        "bbox":  [
+                     2.3704375,
+                     48.680499999999995,
+                     2.5025,
+                     48.820624999999993
+                 ],
+        "maxzoom":  15,
+        "bytes":  16547507
+    },
+    {
+        "file":  "idf_11.pmtiles",
+        "zone":  "Ile-de-France",
+        "bbox":  [
+                     2.238375,
+                     48.820624999999993,
+                     2.3704375,
+                     48.8906875
+                 ],
+        "maxzoom":  15,
+        "bytes":  17713035
+    },
+    {
+        "file":  "idf_12.pmtiles",
+        "zone":  "Ile-de-France",
+        "bbox":  [
+                     2.238375,
+                     48.8906875,
+                     2.3704375,
+                     48.96075
+                 ],
+        "maxzoom":  15,
+        "bytes":  13354104
+    },
+    {
+        "file":  "idf_13.pmtiles",
+        "zone":  "Ile-de-France",
+        "bbox":  [
+                     2.3704375,
+                     48.820624999999993,
+                     2.5025,
+                     48.96075
+                 ],
+        "maxzoom":  15,
+        "bytes":  22696384
+    },
+    {
+        "file":  "idf_14.pmtiles",
+        "zone":  "Ile-de-France",
+        "bbox":  [
+                     1.97425,
+                     48.96075,
+                     2.238375,
+                     49.241
+                 ],
+        "maxzoom":  15,
+        "bytes":  18573672
+    },
+    {
+        "file":  "idf_15.pmtiles",
+        "zone":  "Ile-de-France",
+        "bbox":  [
+                     2.238375,
+                     48.96075,
+                     2.5025,
+                     49.241
+                 ],
+        "maxzoom":  15,
+        "bytes":  18994423
+    },
+    {
+        "file":  "idf_16.pmtiles",
+        "zone":  "Ile-de-France",
+        "bbox":  [
+                     2.5025,
+                     48.12,
+                     3.0307500000000003,
+                     48.40025
+                 ],
+        "maxzoom":  15,
+        "bytes":  13634541
+    },
+    {
+        "file":  "idf_17.pmtiles",
+        "zone":  "Ile-de-France",
+        "bbox":  [
+                     2.5025,
+                     48.40025,
+                     3.0307500000000003,
+                     48.680499999999995
+                 ],
+        "maxzoom":  15,
+        "bytes":  18244964
+    },
+    {
+        "file":  "idf_18.pmtiles",
+        "zone":  "Ile-de-France",
+        "bbox":  [
+                     3.0307500000000003,
+                     48.12,
+                     3.559,
+                     48.680499999999995
+                 ],
+        "maxzoom":  15,
+        "bytes":  18924909
+    },
+    {
+        "file":  "idf_19.pmtiles",
+        "zone":  "Ile-de-France",
+        "bbox":  [
+                     2.5025,
+                     48.680499999999995,
+                     2.7666250000000003,
+                     48.820624999999993
+                 ],
+        "maxzoom":  15,
+        "bytes":  12665926
+    },
+    {
+        "file":  "idf_20.pmtiles",
+        "zone":  "Ile-de-France",
+        "bbox":  [
+                     2.5025,
+                     48.820624999999993,
+                     2.7666250000000003,
+                     48.96075
+                 ],
+        "maxzoom":  15,
+        "bytes":  19992684
+    },
+    {
+        "file":  "idf_21.pmtiles",
+        "zone":  "Ile-de-France",
+        "bbox":  [
+                     2.7666250000000003,
+                     48.680499999999995,
+                     3.0307500000000003,
+                     48.96075
+                 ],
+        "maxzoom":  15,
+        "bytes":  13060359
+    },
+    {
+        "file":  "idf_22.pmtiles",
+        "zone":  "Ile-de-France",
+        "bbox":  [
+                     2.5025,
+                     48.96075,
+                     3.0307500000000003,
+                     49.241
+                 ],
+        "maxzoom":  15,
+        "bytes":  16339235
+    },
+    {
+        "file":  "idf_23.pmtiles",
+        "zone":  "Ile-de-France",
+        "bbox":  [
+                     3.0307500000000003,
+                     48.680499999999995,
+                     3.559,
+                     49.241
+                 ],
+        "maxzoom":  15,
+        "bytes":  21036615
+    },
+    {
+        "file":  "marseille_01.pmtiles",
+        "zone":  "Marseille",
+        "bbox":  [
+                     5.3,
+                     43.2,
+                     5.48,
+                     43.38
+                 ],
+        "maxzoom":  null,
+        "bytes":  14808828
+    },
+    {
+        "file":  "lyon_01.pmtiles",
+        "zone":  "Lyon",
+        "bbox":  [
+                     4.77,
+                     45.7,
+                     4.92,
+                     45.8
+                 ],
+        "maxzoom":  null,
+        "bytes":  14188167
+    },
+    {
+        "file":  "toulouse_01.pmtiles",
+        "zone":  "Toulouse",
+        "bbox":  [
+                     1.35,
+                     43.54,
+                     1.52,
+                     43.67
+                 ],
+        "maxzoom":  null,
+        "bytes":  19068780
+    },
+    {
+        "file":  "nice_01.pmtiles",
+        "zone":  "Nice",
+        "bbox":  [
+                     7.19,
+                     43.64,
+                     7.33,
+                     43.76
+                 ],
+        "maxzoom":  null,
+        "bytes":  7494401
+    },
+    {
+        "file":  "nantes_01.pmtiles",
+        "zone":  "Nantes",
+        "bbox":  [
+                     1.48,
+                     47.17,
+                     1.64,
+                     47.28
+                 ],
+        "maxzoom":  null,
+        "bytes":  3342769
+    },
+    {
+        "file":  "montpellier_01.pmtiles",
+        "zone":  "Montpellier",
+        "bbox":  [
+                     3.8,
+                     43.56,
+                     3.95,
+                     43.66
+                 ],
+        "maxzoom":  null,
+        "bytes":  12278552
+    },
+    {
+        "file":  "strasbourg_01.pmtiles",
+        "zone":  "Strasbourg",
+        "bbox":  [
+                     7.67,
+                     48.5,
+                     7.82,
+                     48.64
+                 ],
+        "maxzoom":  null,
+        "bytes":  12524160
+    },
+    {
+        "file":  "bordeaux_01.pmtiles",
+        "zone":  "Bordeaux",
+        "bbox":  [
+                     -0.66,
+                     44.79,
+                     -0.5,
+                     44.9
+                 ],
+        "maxzoom":  null,
+        "bytes":  14404150
+    },
+    {
+        "file":  "lille_01.pmtiles",
+        "zone":  "Lille",
+        "bbox":  [
+                     2.98,
+                     50.59,
+                     3.17,
+                     50.68
+                 ],
+        "maxzoom":  null,
+        "bytes":  15257767
+    }
+]
