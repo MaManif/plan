@@ -9,26 +9,27 @@
 html,body{height:100%;margin:0;font:14px/1.4 system-ui,sans-serif;background:#fff;color:#111}
 #map{position:absolute;inset:0}
 #etat{position:absolute;left:8px;right:8px;top:calc(8px + env(safe-area-inset-top,0px));z-index:5;
-  background:rgba(255,255,255,.94);border:2px solid #111;border-radius:10px;padding:6px 10px;font-size:13px}
-#villes a{display:inline-block;margin:2px 8px 2px 0;color:#111}
-#fich{margin-top:2px;color:#555;font-size:12px}
-.ko{color:#b00020}
+  background:rgba(255,255,255,.94);border:2px solid #111;border-radius:10px;padding:8px 10px;max-height:45%;overflow:auto;font-size:13px}
+#etat b{display:block;margin-bottom:2px}
+#villes a{display:inline-block;margin:2px 6px 2px 0;color:#111}
+.ok{color:#0a7a2f}.ko{color:#b00020}
 </style>
 </head>
 <body>
 <div id="map"></div>
-<div id="etat">
-  <div id="villes"></div>
-  <div id="fich">Chargement…</div>
-  <div id="err" class="ko"></div>
-</div>
+<div id="etat"><b>Test de la carte</b><div id="villes"></div><div id="log"></div></div>
 
 <script src="lib/maplibre-gl/maplibre-gl.js"></script>
 <script src="lib/pmtiles/pmtiles.js"></script>
 <script src="lib/basemaps/basemaps.js"></script>
 <script>
+const log = (msg, cls) => {
+  const d = document.createElement("div");
+  if (cls) d.className = cls;
+  d.textContent = msg;
+  document.getElementById("log").appendChild(d);
+};
 const abs = p => new URL(p, location.href).href;
-const erreur = m => { document.getElementById("err").textContent = m; };
 
 const VILLES = {
   paris:[2.3522,48.8566], marseille:[5.3698,43.2965], lyon:[4.8357,45.7640],
@@ -36,9 +37,10 @@ const VILLES = {
   montpellier:[3.8767,43.6108], strasbourg:[7.7521,48.5734],
   bordeaux:[-0.5792,44.8378], lille:[3.0573,50.6292]
 };
-const ville = (new URLSearchParams(location.search).get("ville") || "paris").toLowerCase();
-const centre = VILLES[ville] || VILLES.paris;
+const ville = (new URLSearchParams(location.search).get("ville") || "lyon").toLowerCase();
+const centre = VILLES[ville] || VILLES.lyon;
 
+// Liens pour tester chaque ville
 const box = document.getElementById("villes");
 Object.keys(VILLES).forEach(v => {
   const a = document.createElement("a");
@@ -47,98 +49,63 @@ Object.keys(VILLES).forEach(v => {
   box.appendChild(a);
 });
 
-// ---- Lecture automatique des bons fichiers, comme une seule carte ----
-let FICHIERS = [];            // liste issue de index.json
-const OUVERTS = {};           // fichiers PMTiles deja ouverts
-const UTILISES = new Set();   // pour l'affichage de test
-
-function tuileBbox(z, x, y) {
-  const n = Math.pow(2, z);
-  const lon = xx => xx / n * 360 - 180;
-  const lat = yy => {
-    const r = Math.PI - 2 * Math.PI * yy / n;
-    return 180 / Math.PI * Math.atan(0.5 * (Math.exp(r) - Math.exp(-r)));
-  };
-  return [lon(x), lat(y + 1), lon(x + 1), lat(y)];   // ouest, sud, est, nord
-}
-const aire = b => (b[2] - b[0]) * (b[3] - b[1]);
-
-function choisir(z, x, y) {
-  const t = tuileBbox(z, x, y);
-  const cand = FICHIERS.filter(f =>
-    (f.maxzoom == null ? 15 : f.maxzoom) >= z &&
-    f.bbox[0] < t[2] && f.bbox[2] > t[0] && f.bbox[1] < t[3] && f.bbox[3] > t[1]);
-  if (!cand.length) return [];
-  // vues larges : on prend le fichier le plus grand ; vues detaillees : le plus local
-  cand.sort((a, b) => z <= 9 ? aire(b.bbox) - aire(a.bbox) : aire(a.bbox) - aire(b.bbox));
-  return cand;
-}
-
-function ouvrir(nom) {
-  if (!OUVERTS[nom]) OUVERTS[nom] = new pmtiles.PMTiles(abs("cartes/" + nom));
-  return OUVERTS[nom];
-}
-
-function majAffichage() {
-  document.getElementById("fich").textContent =
-    "Fichiers lus automatiquement : " + (UTILISES.size ? Array.from(UTILISES).sort().join(", ") : "aucun");
-}
-
-async function chargerTuile(params) {
-  const m = params.url.match(/^multi:\/\/(\d+)\/(\d+)\/(\d+)/);
-  if (!m) return { data: new Uint8Array() };
-  const z = +m[1], x = +m[2], y = +m[3];
-  for (const f of choisir(z, x, y)) {
-    try {
-      const r = await ouvrir(f.file).getZxy(z, x, y);
-      if (r && r.data) {
-        if (!UTILISES.has(f.file)) { UTILISES.add(f.file); majAffichage(); }
-        return { data: new Uint8Array(r.data) };
-      }
-    } catch (e) {
-      erreur("Lecture de " + f.file + " impossible : " + e.message);
-    }
-  }
-  return { data: new Uint8Array() };   // rien a cet endroit
-}
-
 async function main() {
-  if (typeof maplibregl === "undefined" || typeof pmtiles === "undefined" || typeof basemaps === "undefined") {
-    erreur("Une bibliotheque n'a pas pu etre chargee.");
-    return;
-  }
+  log("Ville testée : " + ville);
+  log(typeof maplibregl !== "undefined" ? "MapLibre chargé" : "MapLibre ABSENT", typeof maplibregl !== "undefined" ? "ok" : "ko");
+  log(typeof pmtiles !== "undefined" ? "PMTiles chargé" : "PMTiles ABSENT", typeof pmtiles !== "undefined" ? "ok" : "ko");
+  log(typeof basemaps !== "undefined" ? "Style Protomaps chargé" : "Style Protomaps ABSENT", typeof basemaps !== "undefined" ? "ok" : "ko");
+
+  // 1) Lire la liste des cartes et choisir le plus petit fichier qui contient le centre de la ville
+  let fichier = null;
   try {
     const txt = (await (await fetch("cartes/index.json")).text()).replace(/^\uFEFF/, "");
     let idx = JSON.parse(txt);
     if (!Array.isArray(idx)) idx = [idx];
-    FICHIERS = idx;
+    const [lon, lat] = centre;
+    const cand = idx.filter(e => lon >= e.bbox[0] && lon <= e.bbox[2] && lat >= e.bbox[1] && lat <= e.bbox[3]);
+    cand.sort((a, b) => (a.bbox[2]-a.bbox[0])*(a.bbox[3]-a.bbox[1]) - (b.bbox[2]-b.bbox[0])*(b.bbox[3]-b.bbox[1]));
+    if (cand.length === 0) { log("Aucun fichier de carte ne couvre cet endroit (index.json)", "ko"); return; }
+    fichier = cand[0].file;
+    log("Fichier choisi : " + fichier + " (" + cand.length + " fichier(s) couvrent ce point)", "ok");
   } catch (e) {
-    erreur("Lecture de index.json impossible : " + e.message);
+    log("Lecture de index.json impossible : " + e.message, "ko");
     return;
   }
-  majAffichage();
 
-  maplibregl.addProtocol("multi", chargerTuile);
+  const URL_FICHIER = abs("cartes/" + fichier);
 
-  const style = {
-    version: 8,
-    glyphs: abs("assets/fonts/") + "{fontstack}/{range}.pbf",
-    sprite: abs("assets/sprites/v4/light"),
-    sources: {
-      protomaps: {
-        type: "vector",
-        tiles: ["multi://{z}/{x}/{y}"],
-        minzoom: 0,
-        maxzoom: 15,
-        attribution: '<a href="https://www.openstreetmap.org/copyright">© OpenStreetMap</a>'
-      }
-    },
-    layers: basemaps.layers("protomaps", basemaps.namedFlavor("light"), { lang: "fr" })
-  };
+  // 2) Requêtes partielles
+  try {
+    const r = await fetch(URL_FICHIER, { headers: { Range: "bytes=0-99" } });
+    const cr = r.headers.get("content-range");
+    if (r.status === 206) log("Requêtes partielles : OK (206)" + (cr ? " – " + cr : ""), "ok");
+    else log("Requêtes partielles : NON (code " + r.status + ")", "ko");
+  } catch (e) { log("Fichier de carte introuvable : " + e.message, "ko"); }
 
-  const map = new maplibregl.Map({ container: "map", style: style, center: centre, zoom: 13, maxZoom: 19 });
-  map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "bottom-right");
-  map.on("error", e => erreur("Erreur carte : " + (e.error && e.error.message ? e.error.message : "inconnue")));
+  // 3) La carte
+  try {
+    const protocol = new pmtiles.Protocol();
+    maplibregl.addProtocol("pmtiles", protocol.tile);
+    const style = {
+      version: 8,
+      glyphs: abs("assets/fonts/") + "{fontstack}/{range}.pbf",
+      sprite: abs("assets/sprites/v4/light"),
+      sources: {
+        protomaps: {
+          type: "vector",
+          url: "pmtiles://" + URL_FICHIER,
+          attribution: '<a href="https://www.openstreetmap.org/copyright">© OpenStreetMap</a>'
+        }
+      },
+      layers: basemaps.layers("protomaps", basemaps.namedFlavor("light"), { lang: "fr" })
+    };
+    const map = new maplibregl.Map({ container: "map", style: style, center: centre, zoom: 14, maxZoom: 19 });
+    map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "bottom-right");
+    map.on("load", () => log("Carte affichée", "ok"));
+    map.on("error", e => log("Erreur carte : " + (e.error && e.error.message ? e.error.message : "inconnue"), "ko"));
+  } catch (e) {
+    log("Impossible de créer la carte : " + e.message, "ko");
+  }
 }
 main();
 </script>
