@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Test carte</title>
+<link rel="stylesheet" href="lib/maplibre-gl/maplibre-gl.css">
+<style>
+html,body{height:100%;margin:0;font:14px/1.4 system-ui,sans-serif;background:#fff;color:#111}
+#map{position:absolute;inset:0}
+#etat{position:absolute;left:8px;right:8px;top:calc(8px + env(safe-area-inset-top,0px));z-index:5;
+  background:rgba(255,255,255,.94);border:2px solid #111;border-radius:10px;padding:6px 10px;font-size:13px}
+#villes a{display:inline-block;margin:2px 8px 2px 0;color:#111}
+#fich{margin-top:2px;color:#555;font-size:12px}
+.ko{color:#b00020}
+</style>
+</head>
+<body>
+<div id="map"></div>
+<div id="etat">
+  <div id="villes"></div>
+  <div id="fich">Chargement…</div>
+  <div id="err" class="ko"></div>
+</div>
+
+<script src="lib/maplibre-gl/maplibre-gl.js"></script>
+<script src="lib/pmtiles/pmtiles.js"></script>
+<script src="lib/basemaps/basemaps.js"></script>
+<script>
+const abs = p => new URL(p, location.href).href;
+const erreur = m => { document.getElementById("err").textContent = m; };
+
+const VILLES = {
+  paris:[2.3522,48.8566], marseille:[5.3698,43.2965], lyon:[4.8357,45.7640],
+  toulouse:[1.4442,43.6047], nice:[7.2620,43.7034], nantes:[-1.5534,47.2184],
+  montpellier:[3.8767,43.6108], strasbourg:[7.7521,48.5734],
+  bordeaux:[-0.5792,44.8378], lille:[3.0573,50.6292]
+};
+const ville = (new URLSearchParams(location.search).get("ville") || "paris").toLowerCase();
+const centre = VILLES[ville] || VILLES.paris;
+
+const box = document.getElementById("villes");
+Object.keys(VILLES).forEach(v => {
+  const a = document.createElement("a");
+  a.href = "?ville=" + v;
+  a.textContent = v === ville ? "[" + v + "]" : v;
+  box.appendChild(a);
+});
+
+// ---- Lecture automatique des bons fichiers, comme une seule carte ----
+let FICHIERS = [];            // liste issue de index.json
+const OUVERTS = {};           // fichiers PMTiles deja ouverts
+const UTILISES = new Set();   // pour l'affichage de test
+
+function tuileBbox(z, x, y) {
+  const n = Math.pow(2, z);
+  const lon = xx => xx / n * 360 - 180;
+  const lat = yy => {
+    const r = Math.PI - 2 * Math.PI * yy / n;
+    return 180 / Math.PI * Math.atan(0.5 * (Math.exp(r) - Math.exp(-r)));
+  };
+  return [lon(x), lat(y + 1), lon(x + 1), lat(y)];   // ouest, sud, est, nord
+}
+const aire = b => (b[2] - b[0]) * (b[3] - b[1]);
+
+function choisir(z, x, y) {
+  const t = tuileBbox(z, x, y);
+  const cand = FICHIERS.filter(f =>
+    (f.maxzoom == null ? 15 : f.maxzoom) >= z &&
+    f.bbox[0] < t[2] && f.bbox[2] > t[0] && f.bbox[1] < t[3] && f.bbox[3] > t[1]);
+  if (!cand.length) return [];
+  // vues larges : on prend le fichier le plus grand ; vues detaillees : le plus local
+  cand.sort((a, b) => z <= 9 ? aire(b.bbox) - aire(a.bbox) : aire(a.bbox) - aire(b.bbox));
+  return cand;
+}
+
+function ouvrir(nom) {
+  if (!OUVERTS[nom]) OUVERTS[nom] = new pmtiles.PMTiles(abs("cartes/" + nom));
+  return OUVERTS[nom];
+}
+
+function majAffichage() {
+  document.getElementById("fich").textContent =
+    "Fichiers lus automatiquement : " + (UTILISES.size ? Array.from(UTILISES).sort().join(", ") : "aucun");
+}
+
+async function chargerTuile(params) {
+  const m = params.url.match(/^multi:\/\/(\d+)\/(\d+)\/(\d+)/);
+  if (!m) return { data: new Uint8Array() };
+  const z = +m[1], x = +m[2], y = +m[3];
+  for (const f of choisir(z, x, y)) {
+    try {
+      const r = await ouvrir(f.file).getZxy(z, x, y);
+      if (r && r.data) {
+        if (!UTILISES.has(f.file)) { UTILISES.add(f.file); majAffichage(); }
+        return { data: new Uint8Array(r.data) };
+      }
+    } catch (e) {
+      erreur("Lecture de " + f.file + " impossible : " + e.message);
+    }
+  }
+  return { data: new Uint8Array() };   // rien a cet endroit
+}
+
+async function main() {
+  if (typeof maplibregl === "undefined" || typeof pmtiles === "undefined" || typeof basemaps === "undefined") {
+    erreur("Une bibliotheque n'a pas pu etre chargee.");
+    return;
+  }
+  try {
+    const txt = (await (await fetch("cartes/index.json")).text()).replace(/^\uFEFF/, "");
+    let idx = JSON.parse(txt);
+    if (!Array.isArray(idx)) idx = [idx];
+    FICHIERS = idx;
+  } catch (e) {
+    erreur("Lecture de index.json impossible : " + e.message);
+    return;
+  }
+  majAffichage();
+
+  maplibregl.addProtocol("multi", chargerTuile);
+
+  const style = {
+    version: 8,
+    glyphs: abs("assets/fonts/") + "{fontstack}/{range}.pbf",
+    sprite: abs("assets/sprites/v4/light"),
+    sources: {
+      protomaps: {
+        type: "vector",
+        tiles: ["multi://{z}/{x}/{y}"],
+        minzoom: 0,
+        maxzoom: 15,
+        attribution: '<a href="https://www.openstreetmap.org/copyright">© OpenStreetMap</a>'
+      }
+    },
+    layers: basemaps.layers("protomaps", basemaps.namedFlavor("light"), { lang: "fr" })
+  };
+
+  const map = new maplibregl.Map({ container: "map", style: style, center: centre, zoom: 13, maxZoom: 19 });
+  map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "bottom-right");
+  map.on("error", e => erreur("Erreur carte : " + (e.error && e.error.message ? e.error.message : "inconnue")));
+}
+main();
+</script>
+</body>
+</html>
