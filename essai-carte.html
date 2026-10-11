@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Essai carte deux couleurs</title>
+<link rel="stylesheet" href="lib/maplibre-gl/maplibre-gl.css">
+<style>
+@font-face{font-family:"Anton";font-style:normal;font-weight:400;font-display:swap;src:url("assets/polices/anton-400.woff2") format("woff2")}
+@font-face{font-family:"Archivo";font-style:normal;font-weight:400;font-display:swap;src:url("assets/polices/archivo-400.woff2") format("woff2")}
+@font-face{font-family:"Archivo";font-style:normal;font-weight:800;font-display:swap;src:url("assets/polices/archivo-800.woff2") format("woff2")}
+:root{--bg:#ffd23f;--fg:#111;--card:#111;--cardfg:#ffd23f;--line:#111;--ombre:4px 4px 0 var(--line);--t-rapide:.15s;--courbe:ease-out}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#111;--fg:#ffd23f;--card:#ffd23f;--cardfg:#111;--line:#ffd23f}}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font:400 1rem/1.5 "Archivo",system-ui,sans-serif}
+#map{position:absolute;inset:0}
+.panneau{position:absolute;z-index:5;left:max(8px,env(safe-area-inset-left));right:max(8px,env(safe-area-inset-right));top:calc(8px + env(safe-area-inset-top,0px));
+ background:var(--bg);border:3px solid var(--line);border-radius:6px;padding:8px;max-height:60%;overflow:auto}
+.rang{display:flex;flex-wrap:wrap;gap:8px;padding:0 4px 4px 0;margin-bottom:4px}
+.rang button{font:inherit;font-size:.875rem;font-weight:800;line-height:1.2;min-height:44px;padding:4px 16px;border:3px solid var(--line);border-radius:999px;cursor:pointer;
+ background:transparent;color:var(--fg);box-shadow:var(--ombre);transition:transform var(--t-rapide) var(--courbe),box-shadow var(--t-rapide) var(--courbe)}
+.rang button[aria-pressed=true]{background:var(--card);color:var(--cardfg)}
+.rang button:active{transform:translate(4px,4px);box-shadow:0 0 0 var(--line)}
+:focus-visible{outline:3px solid var(--fg);outline-offset:2px}
+.info{font-size:.875rem;margin:4px 0 0}
+details{margin-top:4px;font-size:.875rem}
+summary{cursor:pointer;min-height:44px;display:flex;align-items:center;font-weight:800}
+pre{white-space:pre-wrap;margin:0;font:400 .875rem/1.4 ui-monospace,Consolas,monospace}
+.attrib{position:absolute;left:0;bottom:0;z-index:2;background:var(--bg);color:var(--fg);font-size:.875rem;padding:0 8px;border-top:3px solid var(--line);border-right:3px solid var(--line);border-top-right-radius:6px}
+.attrib a{color:inherit}
+@media (prefers-reduced-motion: reduce){*,*::before,*::after{animation-duration:.01ms !important;transition-duration:.01ms !important}}
+</style>
+</head>
+<body>
+<div id="map" role="application" aria-label="Carte"></div>
+
+<div class="panneau">
+  <div class="rang" role="group" aria-label="Style de la carte">
+    <button type="button" id="b-actuelle" aria-pressed="false">Couleurs actuelles</button>
+    <button type="button" id="b-deux" aria-pressed="true">Deux couleurs</button>
+    <button type="button" id="b-lieux" aria-pressed="false">Lieux : masqués</button>
+  </div>
+  <div class="rang" role="group" aria-label="Aller à une ville" id="villes"></div>
+  <p class="info" id="info">Chargement…</p>
+  <details><summary>Infos techniques</summary><pre id="tech"></pre></details>
+</div>
+<div class="attrib"><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">© OpenStreetMap</a></div>
+
+<script src="lib/maplibre-gl/maplibre-gl.js"></script>
+<script src="lib/pmtiles/pmtiles.js"></script>
+<script src="lib/basemaps/basemaps.js"></script>
+<script>
+(function(){
+ const info=document.getElementById("info"),tech=document.getElementById("tech");
+ const abs=p=>new URL(p,location.href).href;
+ if(typeof maplibregl==="undefined"||typeof pmtiles==="undefined"||typeof basemaps==="undefined"){info.textContent="Une bibliothèque n'a pas pu se charger. Recharge la page.";return}
+
+ // ---- Lecture de plusieurs fichiers comme une seule carte ----
+ let FICHIERS=[];const OUVERTS={};
+ const aire=b=>(b[2]-b[0])*(b[3]-b[1]);
+ function tuileBbox(z,x,y){const n=Math.pow(2,z),lon=v=>v/n*360-180,lat=v=>{const r=Math.PI-2*Math.PI*v/n;return 180/Math.PI*Math.atan(.5*(Math.exp(r)-Math.exp(-r)))};return [lon(x),lat(y+1),lon(x+1),lat(y)]}
+ function choisir(z,x,y){const t=tuileBbox(z,x,y);const c=FICHIERS.filter(f=>(f.maxzoom==null?15:f.maxzoom)>=z&&f.bbox[0]<t[2]&&f.bbox[2]>t[0]&&f.bbox[1]<t[3]&&f.bbox[3]>t[1]);c.sort((a,b)=>z<=9?aire(b.bbox)-aire(a.bbox):aire(a.bbox)-aire(b.bbox));return c}
+ const ouvrir=nom=>OUVERTS[nom]||(OUVERTS[nom]=new pmtiles.PMTiles(abs("cartes/"+nom)));
+ async function chargerTuile(params){
+  const m=params.url.match(/^multi:\/\/(\d+)\/(\d+)\/(\d+)/);if(!m)return{data:new Uint8Array()};
+  const z=+m[1],x=+m[2],y=+m[3];
+  for(const f of choisir(z,x,y)){try{const r=await ouvrir(f.file).getZxy(z,x,y);if(r&&r.data)return{data:new Uint8Array(r.data)}}catch(e){}}
+  return{data:new Uint8Array()};
+ }
+
+ // ---- Couleurs de la charte lues dans la page ----
+ const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+ const sombre=()=>matchMedia("(prefers-color-scheme: dark)").matches&&document.documentElement.dataset.theme!=="light"||document.documentElement.dataset.theme==="dark";
+
+ // ---- Fabrique un "flavor" a deux couleurs a partir de celui de Protomaps ----
+ const estCouleur=v=>typeof v==="string"&&/^(#|rgb|hsl)/i.test(v);
+ const EAU=/water|ocean|waterway|pier/;
+ function choixCouleur(cle,bg,fg){
+  const k=cle.toLowerCase();
+  if(k.includes("halo"))return EAU.test(k)&&!k.includes("waterway")?fg:bg;   // contour des noms
+  if(k.includes("casing"))return bg;                                         // liseré jaune autour des routes
+  if(k.includes("ocean_label")||k.includes("water_label"))return bg;         // noms sur l'eau noire
+  if(/(highway|major|minor|link|other|railway|boundar|water|pier|label|runway|tunnel|bridge|road)/.test(k))return fg;
+  return bg;                                                                  // terre, parcs, bâtiments, etc.
+ }
+ function deuxCouleurs(base,bg,fg){
+  const out={};
+  for(const [k,v] of Object.entries(base)){
+   if(estCouleur(v))out[k]=choixCouleur(k,bg,fg);
+   else if(v&&typeof v==="object"&&!Array.isArray(v)){
+    const sous={};for(const [k2,v2] of Object.entries(v))sous[k2]=estCouleur(v2)?(k==="pois"?fg:bg):v2;
+    out[k]=sous;
+   }else out[k]=v;
+  }
+  return out;
+ }
+
+ // ---- Styles ----
+ let mode="deux",lieux=false;
+ function construire(){
+  const th=sombre()?"dark":"light",bg=css("--bg"),fg=css("--fg");
+  const base=basemaps.namedFlavor(th);
+  const flavor=mode==="deux"?deuxCouleurs(base,bg,fg):base;
+  let layers=basemaps.layers("protomaps",flavor,{lang:"fr"});
+  let hachures=0;
+  if(mode==="deux"){
+   layers=layers.filter(l=>lieux||!(l.id==="pois"||(l.layout&&l.layout["icon-image"])));
+   layers=layers.map(l=>{
+    const c=JSON.parse(JSON.stringify(l));
+    if(c.layout&&c.layout["icon-image"]){c.paint=c.paint||{};c.paint["icon-opacity"]=0}
+    if(c.type==="fill"&&/(park|green|wood|forest)/.test(c.id)){c.paint=c.paint||{};c.paint["fill-pattern"]="hachure";hachures++}
+    return c;
+   });
+  }
+  tech.textContent="Couches : "+layers.length+"\nCouches hachurées : "+hachures+"\n\nIdentifiants :\n"+layers.map(l=>l.type+"  "+l.id).join("\n");
+  return{version:8,glyphs:abs("assets/fonts/")+"{fontstack}/{range}.pbf",sprite:abs("assets/sprites/v4/"+th),
+   sources:{protomaps:{type:"vector",tiles:["multi://{z}/{x}/{y}"],minzoom:0,maxzoom:15}},layers:layers};
+ }
+
+ // Motif hachuré (lignes fines de la couleur de trait) pour les parcs et les bois
+ function hachure(){
+  const c=document.createElement("canvas");c.width=c.height=16;const x=c.getContext("2d");
+  x.strokeStyle=css("--fg");x.lineWidth=2;x.beginPath();
+  x.moveTo(-1,17);x.lineTo(17,-1);x.moveTo(-1,1);x.lineTo(1,-1);x.moveTo(15,17);x.lineTo(17,15);x.stroke();
+  return x.getImageData(0,0,16,16);
+ }
+
+ const VILLES=[["Paris",2.3522,48.8566,13],["Lyon",4.8357,45.7640,13],["Marseille",5.3698,43.2965,13],["Nantes",-1.5534,47.2184,13],["Lille",3.0573,50.6292,13]];
+
+ fetch("cartes/index.json").then(r=>{if(!r.ok)throw new Error();return r.text()}).then(t=>{
+  let idx=JSON.parse(t.replace(/^\uFEFF/,""));if(!Array.isArray(idx))idx=[idx];FICHIERS=idx;
+  maplibregl.addProtocol("multi",chargerTuile);
+  const map=new maplibregl.Map({container:"map",style:construire(),center:[2.3522,48.8566],zoom:13,maxZoom:19,attributionControl:false});
+  map.on("styleimagemissing",e=>{if(e.id==="hachure"&&!map.hasImage("hachure"))map.addImage("hachure",hachure(),{pixelRatio:2})});
+  map.on("load",()=>{info.textContent="Zoome, déplace-toi, et compare les deux styles."});
+  map.on("error",()=>{info.textContent="Un problème est survenu. Recharge la page pour réessayer."});
+
+  const bA=document.getElementById("b-actuelle"),bD=document.getElementById("b-deux"),bL=document.getElementById("b-lieux");
+  const maj=()=>{bA.setAttribute("aria-pressed",mode==="actuelle");bD.setAttribute("aria-pressed",mode==="deux");
+   bL.setAttribute("aria-pressed",lieux);bL.textContent="Lieux : "+(lieux?"affichés":"masqués");bL.disabled=mode!=="deux";bL.style.opacity=mode==="deux"?1:.75;
+   if(map.hasImage("hachure"))map.removeImage("hachure");map.setStyle(construire())};
+  bA.onclick=()=>{mode="actuelle";maj()};
+  bD.onclick=()=>{mode="deux";maj()};
+  bL.onclick=()=>{lieux=!lieux;maj()};
+  try{matchMedia("(prefers-color-scheme: dark)").addEventListener("change",maj)}catch(e){}
+
+  const v=document.getElementById("villes");
+  VILLES.forEach(([nom,lon,lat,z])=>{const b=document.createElement("button");b.type="button";b.textContent=nom;b.onclick=()=>map.flyTo({center:[lon,lat],zoom:z,duration:1200});v.appendChild(b)});
+  maj();
+ }).catch(()=>{info.textContent="La liste des cartes est introuvable. Recharge la page ; si ça continue, réessaie plus tard."});
+})();
+</script>
+</body>
+</html>
